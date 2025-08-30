@@ -2,8 +2,9 @@ import fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { findFile, findWorkspaceRoot } from '../src'
+import { findProjectRoot, findWorkspaceRoot } from '../src'
 import { KNOWN_WORKSPACE } from '../src/constants'
+import { findFile } from '../src/utils'
 
 async function createTempDir(): Promise<string> {
   const directory = await fs.mkdtemp(path.join(tmpdir(), 'package-json.test-'))
@@ -37,7 +38,7 @@ describe('findFile', () => {
   })
 })
 
-describe('findWorkspace', () => {
+describe('findWorkspaceRoot', () => {
   let tempDir: string
 
   beforeEach(async () => {
@@ -77,5 +78,55 @@ describe('findWorkspace', () => {
     await fs.mkdir(subDir, { recursive: true })
 
     expect(await findWorkspaceRoot(subDir)).toBeNull()
+  })
+})
+
+describe('findProjectRoot', () => {
+  let tempDir: string
+
+  beforeEach(async () => {
+    tempDir = await createTempDir()
+  })
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true })
+  })
+
+  it('should find the project root by package file', async () => {
+    const subDir = path.join(tempDir, 'src')
+
+    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fs.mkdir(subDir, { recursive: true })
+
+    expect(await findProjectRoot(subDir)).toBe(tempDir)
+  })
+
+  it('should return the project root if a .git directory is found', async () => {
+    const subDir = path.join(tempDir, 'src')
+    const gitDir = path.join(tempDir, '.git')
+
+    await fs.cp(fixture('_git'), gitDir, { recursive: true })
+    await fs.mkdir(subDir, { recursive: true })
+
+    expect(await findProjectRoot(subDir)).toBe(tempDir)
+  })
+
+  it('should work in a monorepo project', async () => {
+    const projectDir = path.join(tempDir, 'packages', 'package-a')
+    const projectSubDir = path.join(projectDir, 'src')
+
+    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fs.mkdir(projectSubDir, { recursive: true })
+    await fs.cp(fixture('example-repo'), projectDir, { recursive: true })
+
+    expect(await findProjectRoot(projectSubDir)).toBe(projectDir)
+  })
+
+  it('should return null when no condition is met', async () => {
+    const subDir = path.join(tempDir, 'src')
+
+    await fs.mkdir(subDir, { recursive: true })
+
+    expect(await findProjectRoot(subDir)).toBeNull()
   })
 })
