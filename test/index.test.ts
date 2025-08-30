@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { findProjectRoot, findWorkspaceRoot } from '../src'
+import { findPackageFile, findProjectRoot, findWorkspaceRoot } from '../src'
 import { KNOWN_WORKSPACE } from '../src/constants'
 import { findFile } from '../src/utils'
 
@@ -128,5 +128,54 @@ describe('findProjectRoot', () => {
     await fs.mkdir(subDir, { recursive: true })
 
     expect(await findProjectRoot(subDir)).toBeNull()
+  })
+})
+
+describe('findPackageFile', () => {
+  let tempDir: string
+
+  beforeEach(async () => {
+    tempDir = await createTempDir()
+  })
+
+  afterEach(async () => {
+    await fs.rm(tempDir, { recursive: true, force: true })
+  })
+
+  it('should find the nearest package file', async () => {
+    const projectDir = path.join(tempDir, 'packages', 'package-a')
+    const projectSubDir = path.join(projectDir, 'src')
+
+    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fs.mkdir(projectSubDir, { recursive: true })
+    await fs.cp(fixture('example-repo'), projectDir, { recursive: true })
+
+    expect(await findPackageFile(projectSubDir)).toBe(path.join(projectDir, 'package.json'))
+  })
+
+  it('should stop when finding a .git directory', async () => {
+    const subDir = path.join(tempDir, 'packages', 'package-a')
+    const gitDir = path.join(tempDir, '.git')
+
+    await fs.cp(fixture('_git'), gitDir, { recursive: true })
+    await fs.mkdir(subDir, { recursive: true })
+
+    expect(await findPackageFile(subDir)).toBeNull()
+  })
+
+  it('should return null when no package file is found', async () => {
+    const subDir = path.join(tempDir, 'src')
+
+    await fs.mkdir(subDir, { recursive: true })
+
+    expect(await findPackageFile(subDir)).toBeNull()
+  })
+
+  it('should throw an error when no package file is found and try is false', async () => {
+    const subDir = path.join(tempDir, 'src')
+
+    await fs.mkdir(subDir, { recursive: true })
+
+    await expect(findPackageFile(subDir, { try: false })).rejects.toThrow('No package file found.')
   })
 })

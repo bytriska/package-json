@@ -7,6 +7,7 @@ export async function findFile(
   options: FindFileOptions & ThrowableOptions,
 ): Promise<string | null> {
   const arrayFiles = Array.isArray(file) ? file : [file]
+  const isTry = options.try ?? true // default to true
 
   for (const f of arrayFiles) {
     const filepath = path.join(path.resolve(options.dir), f)
@@ -19,7 +20,7 @@ export async function findFile(
     return filepath
   }
 
-  if (!options.try)
+  if (!isTry)
     throw new Error('None of the specified files were found.')
 
   return null
