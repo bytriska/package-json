@@ -1,23 +1,26 @@
-import type { FindFileOptions } from './types'
+import type { FindFileOptions, ThrowableOptions } from './types'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
 export async function findFile(
   file: string | string[],
-  { dir, test }: FindFileOptions,
+  options: FindFileOptions & ThrowableOptions,
 ): Promise<string | null> {
   const arrayFiles = Array.isArray(file) ? file : [file]
 
   for (const f of arrayFiles) {
-    const filepath = path.join(path.resolve(dir), f)
+    const filepath = path.join(path.resolve(options.dir), f)
 
     if (!(await pathExist(filepath, 'file')))
       continue
-    if (test && !(await test(filepath)))
+    if (options.test && !(await options.test(filepath)))
       continue
 
     return filepath
   }
+
+  if (!options.try)
+    throw new Error('None of the specified files were found.')
 
   return null
 }
