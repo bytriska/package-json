@@ -1,42 +1,9 @@
 import fs from 'node:fs/promises'
-import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { findPackageFile, findProjectRoot, findWorkspaceRoot } from '../src'
 import { KNOWN_WORKSPACE } from '../src/constants'
-import { findFile } from '../src/utils'
-
-async function createTempDir(): Promise<string> {
-  const directory = await fs.mkdtemp(path.join(tmpdir(), 'package-json.test-'))
-
-  return directory
-}
-
-const fixture = (...p: string[]) => path.join(path.dirname(import.meta.filename), 'fixture', ...p)
-
-describe('findFile', () => {
-  let tempDir: string
-
-  beforeEach(async () => {
-    tempDir = await createTempDir()
-  })
-
-  afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true })
-  })
-
-  it('should find a file that exists', async () => {
-    const filepath = path.join(tempDir, 'file.txt')
-    await fs.writeFile(filepath, 'example content')
-
-    expect(await findFile('file.txt', { dir: tempDir })).toBe(filepath)
-    expect(await findFile(['nonexistent.txt', 'file.txt'], { dir: tempDir })).toBe(filepath)
-  })
-
-  it('should return null for a file that does not exist', async () => {
-    expect(await findFile('nonexistent.txt', { dir: tempDir })).toBeNull()
-  })
-})
+import { createTempDir, fixture } from './utils'
 
 describe('findWorkspaceRoot', () => {
   let tempDir: string
