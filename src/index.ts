@@ -1,6 +1,6 @@
 import type { ThrowableOptions } from './types'
 import path from 'node:path'
-import { KNOWN_WORKSPACE, PACKAGE_FILES } from './constants'
+import { KNOWN_WORKSPACE, PACKAGE_FILE } from './constants'
 import { findFile, lookupDirectories, pathExist } from './utils'
 
 export async function findWorkspaceRoot(cwd: string): Promise<string | null> {
@@ -39,7 +39,7 @@ export async function findProjectRoot(cwd: string): Promise<string | null> {
     if (await pathExist(path.join(testPath, '.git', 'config'), 'file'))
       return testPath
 
-    if (await findFile(PACKAGE_FILES, { dir: testPath }))
+    if (await findFile(PACKAGE_FILE, { dir: testPath }))
       return testPath
   }
 
@@ -53,7 +53,7 @@ export async function findPackageFile(
   const isTry = options?.try ?? true // default to true
 
   for (const testPath of lookupDirectories(path.resolve(path.normalize(cwd)))) {
-    const found = await findFile(PACKAGE_FILES, { dir: testPath })
+    const found = await findFile(PACKAGE_FILE, { dir: testPath })
 
     if (found)
       return found
