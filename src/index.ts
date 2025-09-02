@@ -1,4 +1,3 @@
-import type { ThrowableOptions } from './types'
 import path from 'node:path'
 import { PACKAGE_FILE, WORKSPACE_INDICATOR } from './constants'
 import { findFile, lookupDirectories, pathExist } from './utils'
@@ -44,12 +43,7 @@ export async function findProjectRoot(cwd: string): Promise<string | null> {
   return null
 }
 
-export async function findPackageFile(
-  cwd: string,
-  options?: ThrowableOptions,
-): Promise<string | null> {
-  const isTry = options?.try ?? true // default to true
-
+export async function findPackageFile(cwd: string): Promise<string | null> {
   for (const testPath of lookupDirectories(path.resolve(path.normalize(cwd)))) {
     const found = await findFile(PACKAGE_FILE, { dir: testPath })
 
@@ -59,9 +53,6 @@ export async function findPackageFile(
     if (await pathExist(path.join(testPath, '.git', 'config'), 'file'))
       break
   }
-
-  if (!isTry)
-    throw new Error('No package file found.')
 
   return null
 }

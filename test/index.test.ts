@@ -136,12 +136,4 @@ describe('findPackageFile', () => {
 
     expect(await findPackageFile(subDir)).toBeNull()
   })
-
-  it('should throw an error when no package file is found and try is false', async () => {
-    const subDir = path.join(tempDir, 'src')
-
-    await fs.mkdir(subDir, { recursive: true })
-
-    await expect(findPackageFile(subDir, { try: false })).rejects.toThrow('No package file found.')
-  })
 })
