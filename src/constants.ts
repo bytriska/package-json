@@ -1,11 +1,5 @@
-import type { WorkspaceTest } from './types'
-
 export const PACKAGE_FILE = ['package.json']
 
-export const KNOWN_WORKSPACE: Record<string, WorkspaceTest> = {
-  turbo: { files: ['turbo.json'] },
-  nx: { files: ['nx.json'] },
-  pnpm: { files: ['pnpm-workspace.yaml'] },
-  lerna: { files: ['lerna.json'] },
-  singleRepo: { files: PACKAGE_FILE },
-}
+export const WORKSPACE_FILE = ['pnpm-workspace.yaml', 'lerna.json', 'nx.json', 'turbo.json']
+
+export const WORKSPACE_INDICATOR = [WORKSPACE_FILE, PACKAGE_FILE]

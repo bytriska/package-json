@@ -1,29 +1,27 @@
 import type { ThrowableOptions } from './types'
 import path from 'node:path'
-import { KNOWN_WORKSPACE, PACKAGE_FILE } from './constants'
+import { PACKAGE_FILE, WORKSPACE_INDICATOR } from './constants'
 import { findFile, lookupDirectories, pathExist } from './utils'
 
-export async function findWorkspaceRoot(cwd: string): Promise<string | null> {
-  let candidate: string = ''
+export async function findWorkspaceRoot(cwd: string): Promise<string | undefined> {
+  let candidate: string | undefined
   // The lowest point (most preferred) workspace type we've found so far
-  let lowestPoint: number = Object.keys(KNOWN_WORKSPACE).length + 1
+  let lowestPoint: number = Object.keys(WORKSPACE_INDICATOR).length + 1
 
-  for (const testPath of lookupDirectories(path.resolve(path.normalize(cwd)))) {
+  for (const testPath of lookupDirectories(path.normalize(path.resolve(cwd)))) {
     // If we find a .git directory, stop searching upwards
     if (await pathExist(path.join(testPath, '.git', 'config'), 'file')) {
       candidate ||= testPath
       break
     }
 
-    const workspaceNames = Object.keys(KNOWN_WORKSPACE)
-    for (const [point, workspaceName] of workspaceNames.entries()) {
+    for (const [point, indicatorFile] of WORKSPACE_INDICATOR.entries()) {
       if (point >= lowestPoint)
         continue
 
-      const workspace = KNOWN_WORKSPACE[workspaceName]
-      const workspaceFile = await findFile(workspace.files, { dir: testPath, test: workspace.test })
+      const foundIndicator = await findFile(indicatorFile, { dir: testPath })
 
-      if (workspaceFile) {
+      if (foundIndicator) {
         candidate = testPath
         lowestPoint = point
         break
@@ -31,7 +29,7 @@ export async function findWorkspaceRoot(cwd: string): Promise<string | null> {
     }
   }
 
-  return candidate || null
+  return candidate
 }
 
 export async function findProjectRoot(cwd: string): Promise<string | null> {

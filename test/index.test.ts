@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { findPackageFile, findProjectRoot, findWorkspaceRoot } from '../src'
-import { KNOWN_WORKSPACE } from '../src/constants'
+import { WORKSPACE_INDICATOR } from '../src/constants'
 import { createTempDir, fixture } from './utils'
 
 describe('findWorkspaceRoot', () => {
@@ -17,12 +17,11 @@ describe('findWorkspaceRoot', () => {
   })
 
   it('should find the workspace root for all known workspace types', async () => {
-    for (const workspaceNames of Object.keys(KNOWN_WORKSPACE)) {
-      const workspaceFile = KNOWN_WORKSPACE[workspaceNames].files[0]
+    for (const indicatorFile of WORKSPACE_INDICATOR) {
       const subDir = path.join(tempDir, 'packages', 'package-a')
 
       await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
-      await fs.writeFile(path.join(tempDir, workspaceFile), '')
+      await fs.writeFile(path.join(tempDir, indicatorFile[0]), '')
       await fs.mkdir(subDir, { recursive: true })
 
       expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
@@ -44,7 +43,7 @@ describe('findWorkspaceRoot', () => {
 
     await fs.mkdir(subDir, { recursive: true })
 
-    expect(await findWorkspaceRoot(subDir)).toBeNull()
+    expect(await findWorkspaceRoot(subDir)).toBeUndefined()
   })
 })
 
