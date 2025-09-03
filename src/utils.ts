@@ -1,4 +1,4 @@
-import fs from 'node:fs/promises'
+import fsp from 'node:fs/promises'
 import path from 'node:path'
 
 export interface FindFileOptions {
@@ -33,7 +33,7 @@ export function* lookupDirectories(dir: string): Generator<string> {
 
 export async function pathExist(path: string, type: 'file' | 'dir'): Promise<boolean> {
   try {
-    const stat = await fs.stat(path)
+    const stat = await fsp.stat(path)
     return type === 'file' ? stat.isFile() : stat.isDirectory()
   }
   catch (err: unknown) {

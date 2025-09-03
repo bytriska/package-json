@@ -1,9 +1,9 @@
-import fs from 'node:fs/promises'
+import fsp from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 export async function createTempDir(): Promise<string> {
-  return fs.mkdtemp(path.join(tmpdir(), 'package-json.test-'))
+  return fsp.mkdtemp(path.join(tmpdir(), 'package-json.test-'))
 }
 
 export function fixture(...p: string[]): string {

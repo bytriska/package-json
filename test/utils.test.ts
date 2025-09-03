@@ -1,4 +1,4 @@
-import fs from 'node:fs/promises'
+import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { findFile, pathExist } from '../src/utils'
@@ -12,12 +12,12 @@ describe('findFile', () => {
   })
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true })
+    await fsp.rm(tempDir, { recursive: true, force: true })
   })
 
   it('should find a file that exists', async () => {
     const filepath = path.join(tempDir, 'file.txt')
-    await fs.writeFile(filepath, 'example content')
+    await fsp.writeFile(filepath, 'example content')
 
     expect(await findFile('file.txt', { dir: tempDir })).toBe(filepath)
     expect(await findFile(['nonexistent.txt', 'file.txt'], { dir: tempDir })).toBe(filepath)
@@ -36,15 +36,15 @@ describe('pathExist', () => {
   })
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true })
+    await fsp.rm(tempDir, { recursive: true, force: true })
   })
 
   it('should return true when the path is exist whatever its a file or directory', async () => {
     const filepath = path.join(tempDir, 'file.txt')
     const dirpath = path.join(tempDir, 'dir')
 
-    await fs.writeFile(filepath, 'example content')
-    await fs.mkdir(dirpath, { recursive: true })
+    await fsp.writeFile(filepath, 'example content')
+    await fsp.mkdir(dirpath, { recursive: true })
 
     expect(await pathExist(filepath, 'file')).toBe(true)
     expect(await pathExist(dirpath, 'dir')).toBe(true)

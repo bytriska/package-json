@@ -1,4 +1,4 @@
-import fs from 'node:fs/promises'
+import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { findPackageFile, findProjectRoot, findWorkspaceRoot } from '../src'
@@ -13,15 +13,15 @@ describe('findWorkspaceRoot', () => {
   })
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true })
+    await fsp.rm(tempDir, { recursive: true, force: true })
   })
 
   it('should return the path when workspace file found', async () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
 
-    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
-    await fs.writeFile(path.join(tempDir, WORKSPACE_FILE[0]), '')
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.writeFile(path.join(tempDir, WORKSPACE_FILE[0]), '')
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
   })
@@ -29,15 +29,15 @@ describe('findWorkspaceRoot', () => {
   it('should return the path when workspace key found in package file', async () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
 
-    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     const packagePath = path.join(tempDir, PACKAGE_FILE[0])
-    const packageBlob = await fs.readFile(packagePath, 'utf-8')
+    const packageBlob = await fsp.readFile(packagePath, 'utf-8')
     const packageManifest = JSON.parse(packageBlob)
 
     packageManifest.workspaces = ['packages/*']
-    await fs.writeFile(packagePath, JSON.stringify(packageManifest, null, 2))
+    await fsp.writeFile(packagePath, JSON.stringify(packageManifest, null, 2))
 
     expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
   })
@@ -45,8 +45,8 @@ describe('findWorkspaceRoot', () => {
   it('should return the path when package file found (single package)', async () => {
     const subDir = path.join(tempDir, 'src')
 
-    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
   })
@@ -55,8 +55,8 @@ describe('findWorkspaceRoot', () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
     const gitDir = path.join(tempDir, '.git')
 
-    await fs.cp(fixture('_git'), gitDir, { recursive: true })
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.cp(fixture('_git'), gitDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
   })
@@ -64,7 +64,7 @@ describe('findWorkspaceRoot', () => {
   it('should return null when no workspace root is found', async () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
 
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findWorkspaceRoot(subDir)).toBeUndefined()
   })
@@ -78,14 +78,14 @@ describe('findProjectRoot', () => {
   })
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true })
+    await fsp.rm(tempDir, { recursive: true, force: true })
   })
 
   it('should find the project root by package file', async () => {
     const subDir = path.join(tempDir, 'src')
 
-    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findProjectRoot(subDir)).toBe(tempDir)
   })
@@ -94,8 +94,8 @@ describe('findProjectRoot', () => {
     const subDir = path.join(tempDir, 'src')
     const gitDir = path.join(tempDir, '.git')
 
-    await fs.cp(fixture('_git'), gitDir, { recursive: true })
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.cp(fixture('_git'), gitDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findProjectRoot(subDir)).toBe(tempDir)
   })
@@ -104,9 +104,9 @@ describe('findProjectRoot', () => {
     const projectDir = path.join(tempDir, 'packages', 'package-a')
     const projectSubDir = path.join(projectDir, 'src')
 
-    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
-    await fs.mkdir(projectSubDir, { recursive: true })
-    await fs.cp(fixture('example-repo'), projectDir, { recursive: true })
+    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.mkdir(projectSubDir, { recursive: true })
+    await fsp.cp(fixture('example-repo'), projectDir, { recursive: true })
 
     expect(await findProjectRoot(projectSubDir)).toBe(projectDir)
   })
@@ -114,7 +114,7 @@ describe('findProjectRoot', () => {
   it('should return null when no condition is met', async () => {
     const subDir = path.join(tempDir, 'src')
 
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findProjectRoot(subDir)).toBeNull()
   })
@@ -128,16 +128,16 @@ describe('findPackageFile', () => {
   })
 
   afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true })
+    await fsp.rm(tempDir, { recursive: true, force: true })
   })
 
   it('should find the nearest package file', async () => {
     const projectDir = path.join(tempDir, 'packages', 'package-a')
     const projectSubDir = path.join(projectDir, 'src')
 
-    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
-    await fs.mkdir(projectSubDir, { recursive: true })
-    await fs.cp(fixture('example-repo'), projectDir, { recursive: true })
+    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.mkdir(projectSubDir, { recursive: true })
+    await fsp.cp(fixture('example-repo'), projectDir, { recursive: true })
 
     expect(await findPackageFile(projectSubDir)).toBe(path.join(projectDir, 'package.json'))
   })
@@ -146,8 +146,8 @@ describe('findPackageFile', () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
     const gitDir = path.join(tempDir, '.git')
 
-    await fs.cp(fixture('_git'), gitDir, { recursive: true })
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.cp(fixture('_git'), gitDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findPackageFile(subDir)).toBeNull()
   })
@@ -155,7 +155,7 @@ describe('findPackageFile', () => {
   it('should return null when no package file is found', async () => {
     const subDir = path.join(tempDir, 'src')
 
-    await fs.mkdir(subDir, { recursive: true })
+    await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findPackageFile(subDir)).toBeNull()
   })
