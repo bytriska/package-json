@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { findPackageFile, findProjectRoot, findWorkspaceRoot } from '../src'
-import { WORKSPACE_INDICATOR } from '../src/constants'
+import { PACKAGE_FILE, WORKSPACE_FILE } from '../src/constants'
 import { createTempDir, fixture } from './utils'
 
 describe('findWorkspaceRoot', () => {
@@ -16,16 +16,39 @@ describe('findWorkspaceRoot', () => {
     await fs.rm(tempDir, { recursive: true, force: true })
   })
 
-  it('should find the workspace root for all known workspace types', async () => {
-    for (const indicatorFile of WORKSPACE_INDICATOR) {
-      const subDir = path.join(tempDir, 'packages', 'package-a')
+  it('should return the path when workspace file found', async () => {
+    const subDir = path.join(tempDir, 'packages', 'package-a')
 
-      await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
-      await fs.writeFile(path.join(tempDir, indicatorFile[0]), '')
-      await fs.mkdir(subDir, { recursive: true })
+    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fs.writeFile(path.join(tempDir, WORKSPACE_FILE[0]), '')
+    await fs.mkdir(subDir, { recursive: true })
 
-      expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
-    }
+    expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
+  })
+
+  it('should return the path when workspace key found in package file', async () => {
+    const subDir = path.join(tempDir, 'packages', 'package-a')
+
+    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fs.mkdir(subDir, { recursive: true })
+
+    const packagePath = path.join(tempDir, PACKAGE_FILE[0])
+    const packageBlob = await fs.readFile(packagePath, 'utf-8')
+    const packageManifest = JSON.parse(packageBlob)
+
+    packageManifest.workspaces = ['packages/*']
+    await fs.writeFile(packagePath, JSON.stringify(packageManifest, null, 2))
+
+    expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
+  })
+
+  it('should return the path when package file found (single package)', async () => {
+    const subDir = path.join(tempDir, 'src')
+
+    await fs.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fs.mkdir(subDir, { recursive: true })
+
+    expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
   })
 
   it('should stop when finding a .git directory', async () => {

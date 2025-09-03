@@ -1,11 +1,50 @@
+import fsp from 'node:fs/promises'
 import path from 'node:path'
-import { PACKAGE_FILE, WORKSPACE_INDICATOR } from './constants'
+import { PACKAGE_FILE, WORKSPACE_FILE } from './constants'
 import { findFile, lookupDirectories, pathExist } from './utils'
+
+async function hasFile(filename: string | string[], dir: string): Promise<boolean> {
+  const found = await findFile(filename, { dir })
+
+  return !!found
+}
+
+async function hasFileWithKey(
+  filename: string | string[],
+  key: string,
+  dir: string,
+): Promise<boolean> {
+  const foundFile = await findFile(filename, { dir })
+
+  if (!foundFile)
+    return false
+
+  switch (path.extname(foundFile)) {
+    case '.json': {
+      const blob = await fsp.readFile(foundFile, 'utf-8')
+      const content = JSON.parse(blob)
+
+      return !!content[key]
+    }
+
+    // TODO: support more file types
+    default:
+      return false
+  }
+}
+
+type WorkspaceCriteria = (testPath: string) => Promise<boolean>
+
+const WORKSPACE_CRITERIA: WorkspaceCriteria[] = [
+  async (testPath: string) => await hasFile(WORKSPACE_FILE, testPath),
+  async (testPath: string) => await hasFileWithKey(PACKAGE_FILE, 'workspaces', testPath),
+  async (testPath: string) => await hasFile(PACKAGE_FILE, testPath),
+]
 
 export async function findWorkspaceRoot(cwd: string): Promise<string | undefined> {
   let candidate: string | undefined
   // The lowest point (most preferred) workspace type we've found so far
-  let lowestPoint: number = Object.keys(WORKSPACE_INDICATOR).length + 1
+  let lowestPoint: number = WORKSPACE_CRITERIA.length + 1
 
   for (const testPath of lookupDirectories(path.normalize(path.resolve(cwd)))) {
     // If we find a .git directory, stop searching upwards
@@ -14,11 +53,11 @@ export async function findWorkspaceRoot(cwd: string): Promise<string | undefined
       break
     }
 
-    for (const [point, indicatorFile] of WORKSPACE_INDICATOR.entries()) {
+    for (const [point, criteriaFn] of WORKSPACE_CRITERIA.entries()) {
       if (point >= lowestPoint)
         continue
 
-      const foundIndicator = await findFile(indicatorFile, { dir: testPath })
+      const foundIndicator = await criteriaFn(testPath)
 
       if (foundIndicator) {
         candidate = testPath
