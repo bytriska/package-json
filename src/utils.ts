@@ -1,3 +1,4 @@
+import type { Buffer } from 'node:buffer'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 
@@ -42,4 +43,16 @@ export async function pathExist(path: string, type: 'file' | 'dir'): Promise<boo
 
     return false
   }
+}
+
+export async function writeFileAtomic(filepath: string, data: string | Buffer): Promise<void> {
+  const dir = path.dirname(filepath)
+  const tempfile = path.join(
+    dir,
+    ''.concat('.', path.basename(filepath), '-', Math.random().toString(16).slice(2), '.tmp'),
+  )
+
+  await fsp.mkdir(dir, { recursive: true })
+  await fsp.writeFile(tempfile, data)
+  await fsp.rename(tempfile, filepath)
 }

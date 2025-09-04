@@ -1,6 +1,6 @@
-import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { PACKAGE_FILE, WORKSPACE_FILE } from './constants'
+import { loadJsonFile } from './parser/json'
 import { findFile, lookupDirectories, pathExist } from './utils'
 
 async function hasFile(filename: string | string[], dir: string): Promise<boolean> {
@@ -21,8 +21,7 @@ async function hasFileWithKey(
 
   switch (path.extname(foundFile)) {
     case '.json': {
-      const blob = await fsp.readFile(foundFile, 'utf-8')
-      const content = JSON.parse(blob)
+      const content = await loadJsonFile<{ [key: string]: unknown }>(foundFile)
 
       return !!content[key]
     }

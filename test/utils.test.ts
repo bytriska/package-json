@@ -1,7 +1,7 @@
 import fsp from 'node:fs/promises'
 import path from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { findFile, pathExist } from '../src/utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { findFile, pathExist, writeFileAtomic } from '../src/utils'
 import { createTempDir } from './utils'
 
 describe('findFile', () => {
@@ -56,5 +56,58 @@ describe('pathExist', () => {
 
     expect(await pathExist(filepath, 'file')).toBe(false)
     expect(await pathExist(dirpath, 'dir')).toBe(false)
+  })
+})
+
+describe('writeFileAtomic', () => {
+  let tempDir: string
+
+  beforeEach(async () => {
+    tempDir = await createTempDir()
+  })
+
+  afterEach(async () => {
+    await fsp.rm(tempDir, { recursive: true, force: true })
+  })
+
+  it('should success write file', async () => {
+    const filepath = path.join(tempDir, 'file.txt')
+
+    await writeFileAtomic(filepath, 'example content')
+
+    expect(await fsp.readFile(filepath, 'utf-8')).toBe('example content')
+  })
+
+  it('should overide the existing file if already exist', async () => {
+    const filepath = path.join(tempDir, 'file.txt')
+
+    await fsp.writeFile(filepath, 'old content')
+    await writeFileAtomic(filepath, 'new content')
+
+    expect(await fsp.readFile(filepath, 'utf-8')).toBe('new content')
+  })
+
+  it('should not change the file if write failed', async () => {
+    const filepath = path.join(tempDir, 'file.txt')
+    await fsp.writeFile(filepath, 'old content')
+
+    const spy = vi.spyOn(fsp, 'writeFile').mockRejectedValue(new Error('write failed'))
+
+    await expect(writeFileAtomic(filepath, 'new content')).rejects.toThrow('write failed')
+    expect(await fsp.readFile(filepath, 'utf-8')).toBe('old content')
+
+    spy.mockRestore()
+  })
+
+  it('should not change the file if rename failed', async () => {
+    const filepath = path.join(tempDir, 'file.txt')
+    await fsp.writeFile(filepath, 'old content')
+
+    const spy = vi.spyOn(fsp, 'rename').mockRejectedValue(new Error('rename failed'))
+
+    await expect(writeFileAtomic(filepath, 'new content')).rejects.toThrow('rename failed')
+    expect(await fsp.readFile(filepath, 'utf-8')).toBe('old content')
+
+    spy.mockRestore()
   })
 })
