@@ -1,7 +1,10 @@
+import type { PackageManifest } from './types'
 import path from 'node:path'
 import { PACKAGE_FILE, WORKSPACE_FILE } from './constants'
-import { loadJsonFile } from './parser/json'
+import { loadJsonFile, saveJsonFile } from './parser/json'
 import { findFile, lookupDirectories, pathExist } from './utils'
+
+export type { PackageManifest } from './types'
 
 async function hasFile(filename: string | string[], dir: string): Promise<boolean> {
   const found = await findFile(filename, { dir })
@@ -93,4 +96,24 @@ export async function findPackageFile(cwd: string): Promise<string | null> {
   }
 
   return null
+}
+
+export async function readPackageManifest(path: string): Promise<PackageManifest> {
+  try {
+    return await loadJsonFile<PackageManifest>(path)
+  }
+  catch (err: any) {
+    if (err.code)
+      throw err
+
+    throw new Error(`Failed to read package manifest at ${path}: ${err.message}`)
+  }
+}
+
+export async function writePackageManifest(
+  path: string,
+  manifest: PackageManifest,
+  options?: { indent?: number | string },
+): Promise<void> {
+  return await saveJsonFile(path, manifest, options)
 }
