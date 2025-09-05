@@ -1,9 +1,15 @@
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { findPackageFile, findProjectRoot, findWorkspaceRoot } from '../src'
+import {
+  findPackageFile,
+  findProjectRoot,
+  findWorkspaceRoot,
+  readPackageManifest,
+  writePackageManifest,
+} from '../src'
 import { PACKAGE_FILE, WORKSPACE_FILE } from '../src/constants'
-import { createTempDir, fixture } from './utils'
+import { createTempDir, fixtures } from './utils'
 
 describe('findWorkspaceRoot', () => {
   let tempDir: string
@@ -19,7 +25,7 @@ describe('findWorkspaceRoot', () => {
   it('should return the path when workspace file found', async () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
 
-    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.cp(fixtures('example-repo'), tempDir, { recursive: true })
     await fsp.writeFile(path.join(tempDir, WORKSPACE_FILE[0]), '')
     await fsp.mkdir(subDir, { recursive: true })
 
@@ -29,7 +35,7 @@ describe('findWorkspaceRoot', () => {
   it('should return the path when workspace key found in package file', async () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
 
-    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.cp(fixtures('example-repo'), tempDir, { recursive: true })
     await fsp.mkdir(subDir, { recursive: true })
 
     const packagePath = path.join(tempDir, PACKAGE_FILE[0])
@@ -45,7 +51,7 @@ describe('findWorkspaceRoot', () => {
   it('should return the path when package file found (single package)', async () => {
     const subDir = path.join(tempDir, 'src')
 
-    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.cp(fixtures('example-repo'), tempDir, { recursive: true })
     await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
@@ -55,7 +61,7 @@ describe('findWorkspaceRoot', () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
     const gitDir = path.join(tempDir, '.git')
 
-    await fsp.cp(fixture('_git'), gitDir, { recursive: true })
+    await fsp.cp(fixtures('_git'), gitDir, { recursive: true })
     await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findWorkspaceRoot(subDir)).toBe(tempDir)
@@ -84,7 +90,7 @@ describe('findProjectRoot', () => {
   it('should find the project root by package file', async () => {
     const subDir = path.join(tempDir, 'src')
 
-    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.cp(fixtures('example-repo'), tempDir, { recursive: true })
     await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findProjectRoot(subDir)).toBe(tempDir)
@@ -94,7 +100,7 @@ describe('findProjectRoot', () => {
     const subDir = path.join(tempDir, 'src')
     const gitDir = path.join(tempDir, '.git')
 
-    await fsp.cp(fixture('_git'), gitDir, { recursive: true })
+    await fsp.cp(fixtures('_git'), gitDir, { recursive: true })
     await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findProjectRoot(subDir)).toBe(tempDir)
@@ -104,9 +110,9 @@ describe('findProjectRoot', () => {
     const projectDir = path.join(tempDir, 'packages', 'package-a')
     const projectSubDir = path.join(projectDir, 'src')
 
-    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.cp(fixtures('example-repo'), tempDir, { recursive: true })
     await fsp.mkdir(projectSubDir, { recursive: true })
-    await fsp.cp(fixture('example-repo'), projectDir, { recursive: true })
+    await fsp.cp(fixtures('example-repo'), projectDir, { recursive: true })
 
     expect(await findProjectRoot(projectSubDir)).toBe(projectDir)
   })
@@ -135,9 +141,9 @@ describe('findPackageFile', () => {
     const projectDir = path.join(tempDir, 'packages', 'package-a')
     const projectSubDir = path.join(projectDir, 'src')
 
-    await fsp.cp(fixture('example-repo'), tempDir, { recursive: true })
+    await fsp.cp(fixtures('example-repo'), tempDir, { recursive: true })
     await fsp.mkdir(projectSubDir, { recursive: true })
-    await fsp.cp(fixture('example-repo'), projectDir, { recursive: true })
+    await fsp.cp(fixtures('example-repo'), projectDir, { recursive: true })
 
     expect(await findPackageFile(projectSubDir)).toBe(path.join(projectDir, 'package.json'))
   })
@@ -146,7 +152,7 @@ describe('findPackageFile', () => {
     const subDir = path.join(tempDir, 'packages', 'package-a')
     const gitDir = path.join(tempDir, '.git')
 
-    await fsp.cp(fixture('_git'), gitDir, { recursive: true })
+    await fsp.cp(fixtures('_git'), gitDir, { recursive: true })
     await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findPackageFile(subDir)).toBeNull()
@@ -158,5 +164,61 @@ describe('findPackageFile', () => {
     await fsp.mkdir(subDir, { recursive: true })
 
     expect(await findPackageFile(subDir)).toBeNull()
+  })
+})
+
+describe('readPackageManifest', () => {
+  let tempDir: string
+
+  beforeEach(async () => {
+    tempDir = await createTempDir()
+  })
+
+  afterEach(async () => {
+    await fsp.rm(tempDir, { recursive: true, force: true })
+  })
+
+  it('should read package manifest', async () => {
+    const packagePath = path.join(tempDir, 'package.json')
+    const packageManifest = { name: 'example-repo', version: '0.0.0' }
+
+    await fsp.cp(fixtures('example-repo'), tempDir, { recursive: true })
+
+    expect(await readPackageManifest(packagePath)).toEqual(packageManifest)
+  })
+
+  it('should throw an error if package file is invalid', async () => {
+    const packagePath = path.join(tempDir, 'package.json')
+
+    await fsp.cp(fixtures('example-invalid-repo'), tempDir, { recursive: true })
+
+    await expect(readPackageManifest(packagePath)).rejects.toThrowError(
+      /Failed to read package manifest/,
+    )
+  })
+})
+
+describe('writePackageManifest', () => {
+  let tempDir: string
+
+  beforeEach(async () => {
+    tempDir = await createTempDir()
+  })
+
+  afterEach(async () => {
+    await fsp.rm(tempDir, { recursive: true, force: true })
+  })
+
+  it('should write package manifest', async () => {
+    const packagePath = path.join(tempDir, 'package.json')
+    const packageManifest = { name: 'example-repo-updated', version: '0.0.0' }
+
+    await fsp.cp(fixtures('example-repo'), tempDir, { recursive: true })
+
+    await writePackageManifest(packagePath, packageManifest)
+
+    expect(await fsp.readFile(packagePath, 'utf-8')).toBe(
+      JSON.stringify(packageManifest, null, 2).concat('\n'),
+    )
   })
 })
