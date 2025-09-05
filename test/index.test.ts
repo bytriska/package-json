@@ -66,7 +66,7 @@ describe('findWorkspaceRoot', () => {
 
     await fsp.mkdir(subDir, { recursive: true })
 
-    expect(await findWorkspaceRoot(subDir)).toBeUndefined()
+    expect(await findWorkspaceRoot(subDir)).toBeNull()
   })
 })
 

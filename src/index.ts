@@ -43,7 +43,7 @@ const WORKSPACE_CRITERIA: WorkspaceCriteria[] = [
   async (testPath: string) => await hasFile(PACKAGE_FILE, testPath),
 ]
 
-export async function findWorkspaceRoot(cwd: string): Promise<string | undefined> {
+export async function findWorkspaceRoot(cwd: string): Promise<string | null> {
   let candidate: string | undefined
   // The lowest point (most preferred) workspace type we've found so far
   let lowestPoint: number = WORKSPACE_CRITERIA.length + 1
@@ -69,7 +69,7 @@ export async function findWorkspaceRoot(cwd: string): Promise<string | undefined
     }
   }
 
-  return candidate
+  return candidate || null
 }
 
 export async function findProjectRoot(cwd: string): Promise<string | null> {
