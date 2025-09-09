@@ -1,8 +1,1 @@
 packages:
-  - playground/*
-  - packages/*
-
-onlyBuiltDependencies:
-  - esbuild
-  - simple-git-hooks
-  - unrs-resolver
