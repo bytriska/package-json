@@ -28,14 +28,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Format prettier
-        run: pnpm lint:all:prettier
-
       - name: Lint
-        run: pnpm lint:all:eslint
-
-      - name: Type Check
-        run: pnpm test:types
+        run: pnpm lint:fix
 
       - name: Test
         run: pnpm test

@@ -30,12 +30,10 @@
     "prebuild": "pnpm test:types",
     "build": "tsup-node",
     "prepublishOnly": "pnpm build",
-    "release": "bumpp && pnpm publish --access public",
-    "lint:all:eslint": "pnpm lint:eslint \"**/*.{js,ts,tsx,json,yml,yaml,md,html,css}\"",
-    "lint:all:prettier": "pnpm lint:prettier \"**/*.{js,ts,tsx,json,yml,yaml,md,html,css}\"",
-    "lint:eslint": "eslint --fix",
-    "lint:prettier": "prettier --write --log-level warn",
-    "test": "vitest run",
+    "release": "pnpm test && bumpp && pnpm publish --access public",
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint --fix . && prettier --write .",
+    "test": "vitest",
     "test:types": "tsc --noEmit",
     "test:coverage": "vitest run --coverage",
     "prepare": "simple-git-hooks"
@@ -55,5 +53,11 @@
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,json,yaml,md}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }
