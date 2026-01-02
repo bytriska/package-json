@@ -2,7 +2,7 @@
   "name": "@bytriska/package-json",
   "type": "module",
   "version": "0.0.0",
-  "packageManager": "pnpm@10.15.1+sha512.34e538c329b5553014ca8e8f4535997f96180a1d0f614339357449935350d924e22f8614682191264ec33d1462ac21561aff97f6bb18065351c162c7e8f6de67",
+  "packageManager": "pnpm@10.27.0",
   "description": "Simple utilities to find the workspace root, read and write package.json files, and more.",
   "author": "Triska Mahfud K (https://github.com/bytriska)",
   "license": "MIT",
@@ -41,17 +41,17 @@
     "prepare": "simple-git-hooks"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.14.1",
-    "@types/node": "^24.0.1",
-    "@vitest/coverage-v8": "^3.2.3",
-    "bumpp": "^10.1.1",
-    "eslint": "^9.29.0",
-    "lint-staged": "^16.1.2",
+    "@antfu/eslint-config": "^4.19.0",
+    "@types/node": "^24.10.4",
+    "@vitest/coverage-v8": "^4.0.16",
+    "bumpp": "^10.3.2",
+    "eslint": "^9.39.2",
+    "lint-staged": "^16.2.7",
     "prettier": "3.3.3",
-    "simple-git-hooks": "^2.13.0",
-    "tsup": "^8.5.0",
+    "simple-git-hooks": "^2.13.1",
+    "tsup": "^8.5.1",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.3"
+    "vitest": "^4.0.16"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged"
