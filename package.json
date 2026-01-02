@@ -1,7 +1,7 @@
 {
   "name": "@bytriska/package-json",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "packageManager": "pnpm@10.27.0",
   "description": "Simple utilities to find the workspace root, read and write package.json files, and more.",
   "author": "Triska Mahfud K (https://github.com/bytriska)",
